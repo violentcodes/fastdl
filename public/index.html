@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FastDL — Download Videos Instantly</title>
+  <meta name="description" content="Download YouTube videos and Instagram Reels instantly. Paste a link, pick quality, and save.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css?v=3">
+</head>
+<body>
+
+  <!-- Nav -->
+  <nav id="navbar">
+    <div class="nav-inner">
+      <a href="/" class="logo">
+        <svg class="logo-icon" viewBox="0 0 32 32" fill="none"><circle cx="16" cy="16" r="14" stroke="currentColor" stroke-width="2.5"/><path d="M16 9v10m0 0l-4-4m4 4l4-4" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span>fast<em>dl</em></span>
+      </a>
+      <div class="nav-links">
+        <a href="#how-it-works">How it works</a>
+      </div>
+    </div>
+  </nav>
+
+  <main>
+    <!-- Hero -->
+    <section class="hero" id="hero">
+
+
+      <h1>
+        P<em>a</em>ste a link,<br>
+        Download inst<em>a</em>ntly.
+      </h1>
+
+      <p class="hero-sub">
+        YouTube videos, Shorts, and Instagram Reels — saved to your device in seconds.
+      </p>
+
+      <!-- URL Input -->
+      <div class="input-area">
+        <div class="input-box" id="inputBox">
+          <div class="input-platform" id="platformIcon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>
+          </div>
+          <input type="url" id="urlInput" placeholder="Paste a YouTube or Reel link here..." autocomplete="off" spellcheck="false">
+        </div>
+        <button id="fetchBtn" class="btn-primary" aria-label="Get video">
+          <span class="btn-label">Get Video</span>
+          <svg class="btn-spinner" viewBox="0 0 24 24" hidden><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2.5" fill="none" stroke-dasharray="31.4 31.4" stroke-linecap="round"/></svg>
+        </button>
+      </div>
+
+      <!-- Error -->
+      <p class="error-msg" id="errorMsg" hidden></p>
+    </section>
+
+    <!-- Result -->
+    <section class="result" id="resultCard" hidden>
+      <div class="result-inner">
+        <div class="result-thumb">
+          <img id="thumbnail" src="" alt="Thumbnail">
+          <span class="result-duration" id="durationBadge"></span>
+          <span class="result-platform" id="platformBadge"></span>
+        </div>
+        <div class="result-info">
+          <h2 id="videoTitle"></h2>
+          <p class="result-uploader" id="videoUploader"></p>
+
+          <div class="result-quality">
+            <label for="qualitySelect">Quality</label>
+            <div class="select-box">
+              <select id="qualitySelect"></select>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+            </div>
+          </div>
+
+          <button id="downloadBtn" class="btn-dark">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Download Now
+          </button>
+
+          <div class="progress-area" id="progressArea" hidden>
+            <div class="progress-track"><div class="progress-bar" id="progressBar"></div></div>
+            <span class="progress-label" id="progressLabel">Preparing...</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- How it works -->
+    <section class="steps" id="how-it-works">
+      <h2 class="section-title">How it w<em>o</em>rks</h2>
+      <div class="steps-grid">
+        <div class="step">
+          <div class="step-num">1</div>
+          <h3>Copy link</h3>
+          <p>Grab the share link from YouTube or Instagram.</p>
+        </div>
+        <div class="step-arrow">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 12h14m0 0l-4-4m4 4l-4 4"/></svg>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <h3>Paste &amp; fetch</h3>
+          <p>Paste it above and click "Get Video".</p>
+        </div>
+        <div class="step-arrow">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 12h14m0 0l-4-4m4 4l-4 4"/></svg>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <h3>Download</h3>
+          <p>Pick quality, hit download. That's it.</p>
+        </div>
+      </div>
+    </section>
+
+
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+      <p>fastdl — For personal use only. We don't host any content.</p>
+      <div class="footer-links">
+        <a href="#hero">Home</a>
+        <a href="#features">Features</a>
+        <a href="#how-it-works">How it works</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="app.js?v=16"></script>
+</body>
+</html>
