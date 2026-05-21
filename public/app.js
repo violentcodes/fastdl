@@ -95,7 +95,8 @@ fetchBtn.addEventListener('click', async () => {
 });
 
 function renderResult(data) {
-  $('#thumbnail').src = data.thumbnail ? `/api/proxy-thumbnail?url=${encodeURIComponent(data.thumbnail)}` : '';
+  // Load thumbnail directly since hotlinking is allowed by platforms, saving serverless bandwidth
+  $('#thumbnail').src = data.thumbnail || '';
   $('#videoTitle').textContent = data.title;
   $('#videoUploader').textContent = data.uploader;
 
@@ -136,7 +137,7 @@ $('#downloadBtn').addEventListener('click', async () => {
 
   progressArea.hidden = false;
   progressBar.classList.add('indeterminate');
-  progressLabel.textContent = 'Preparing download...';
+  progressLabel.textContent = 'Resolving media links via Cloud Proxy...';
   $('#downloadBtn').style.display = 'none';
 
   try {
@@ -158,29 +159,28 @@ $('#downloadBtn').addEventListener('click', async () => {
 
     const { downloadUrl, filename } = await prepRes.json();
 
-    progressLabel.textContent = 'Processing video — download will start automatically...';
+    progressLabel.textContent = '✓ Starting download...';
+    progressBar.classList.remove('indeterminate');
+    progressBar.style.width = '100%';
+    progressBar.style.background = '#34c759';
 
+    // Trigger download via new tab navigation. The Cobalt CDN returns direct Content-Disposition: attachment headers,
+    // which prompts a standard file download immediately.
     const a = document.createElement('a');
     a.href = downloadUrl;
     a.download = filename;
+    a.target = '_blank';
     a.style.display = 'none';
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
 
     setTimeout(() => {
-      progressBar.classList.remove('indeterminate');
-      progressBar.style.width = '100%';
-      progressBar.style.background = '#34c759';
-      progressLabel.textContent = '✓ Download started — check your downloads!';
-
-      setTimeout(() => {
-        progressArea.hidden = true;
-        progressBar.style.width = '0%';
-        progressBar.style.background = '';
-        $('#downloadBtn').style.display = '';
-      }, 3000);
-    }, 5000);
+      progressArea.hidden = true;
+      progressBar.style.width = '0%';
+      progressBar.style.background = '';
+      $('#downloadBtn').style.display = '';
+    }, 4000);
   } catch (err) {
     progressBar.classList.remove('indeterminate');
     progressBar.style.width = '100%';
@@ -192,7 +192,7 @@ $('#downloadBtn').addEventListener('click', async () => {
       progressBar.style.width = '0%';
       progressBar.style.background = '';
       $('#downloadBtn').style.display = '';
-    }, 3500);
+    }, 4500);
   }
 });
 
