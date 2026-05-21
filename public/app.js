@@ -13,7 +13,6 @@ const IG_RE = /^(https?:\/\/)?(www\.)?instagram\.com\/(reel|reels|p)\//i;
 
 let currentInfo = null;
 
-// Platform icon matching
 urlInput.addEventListener('input', () => {
   const v = urlInput.value.trim();
   platformIcon.classList.remove('youtube', 'instagram');
@@ -33,7 +32,6 @@ urlInput.addEventListener('keydown', (e) => {
   if (e.key === 'Enter') fetchBtn.click();
 });
 
-// UI helper functions
 function showError(msg) {
   errorMsg.textContent = msg;
   errorMsg.hidden = false;
@@ -63,7 +61,6 @@ function formatBytes(bytes) {
   return mb >= 1000 ? `${(mb / 1024).toFixed(1)} GB` : `${mb.toFixed(1)} MB`;
 }
 
-// Fetch platform info
 fetchBtn.addEventListener('click', async () => {
   hideError();
   resultCard.hidden = true;
@@ -80,7 +77,10 @@ fetchBtn.addEventListener('click', async () => {
     const res = await fetch('/api/info', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ url }),
+      body: JSON.stringify({
+        url,
+        ...getRequestPayloadOptions()
+      }),
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || 'Something went wrong');
@@ -94,7 +94,6 @@ fetchBtn.addEventListener('click', async () => {
   }
 });
 
-// Render dynamic results card
 function renderResult(data) {
   $('#thumbnail').src = data.thumbnail ? `/api/proxy-thumbnail?url=${encodeURIComponent(data.thumbnail)}` : '';
   $('#videoTitle').textContent = data.title;
@@ -127,7 +126,6 @@ function renderResult(data) {
   resultCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
 }
 
-// Download flow
 $('#downloadBtn').addEventListener('click', async () => {
   if (!currentInfo) return;
 
@@ -149,6 +147,7 @@ $('#downloadBtn').addEventListener('click', async () => {
         url: currentInfo.url,
         quality,
         title: currentInfo.title || 'video',
+        ...getRequestPayloadOptions()
       }),
     });
 
@@ -161,7 +160,6 @@ $('#downloadBtn').addEventListener('click', async () => {
 
     progressLabel.textContent = 'Processing video — download will start automatically...';
 
-    // 2-Step browser download triggers
     const a = document.createElement('a');
     a.href = downloadUrl;
     a.download = filename;
@@ -198,7 +196,6 @@ $('#downloadBtn').addEventListener('click', async () => {
   }
 });
 
-// Interactive 3D Cursor Image Trail
 const TRAIL_ASSETS = [
   'https://framerusercontent.com/images/MQ5OgaArayXPtshvbXK3krAdpRE.png',
   'https://framerusercontent.com/images/5onYqEeKeJ17oyUaLyCmrJK3X9A.png',
@@ -270,7 +267,6 @@ function spawnTrailItem(x, y) {
   item.style.left = `${x}px`;
   item.style.top = `${y}px`;
 
-  // Randomize 3D properties
   const size = Math.floor(Math.random() * (380 - 250) + 250);
   item.style.width = `${size}px`;
   item.style.height = `${size}px`;
@@ -319,3 +315,110 @@ function spawnTrailItem(x, y) {
 
   }, DISPLAY_TIME);
 }
+
+let userSettings = {
+  cookieSource: 'none',
+  customCookies: '',
+  customUserAgent: ''
+};
+
+function loadSettings() {
+  const saved = localStorage.getItem('fastdl_settings');
+  if (saved) {
+    try {
+      userSettings = { ...userSettings, ...JSON.parse(saved) };
+    } catch (e) {
+      console.error('Failed to load settings:', e);
+    }
+  }
+
+  const cs = $('#cookieSource');
+  const cc = $('#customCookies');
+  const cua = $('#customUserAgent');
+
+  if (cs) cs.value = userSettings.cookieSource;
+  if (cc) cc.value = userSettings.customCookies;
+  if (cua) cua.value = userSettings.customUserAgent;
+
+  toggleCustomCookiesVisibility();
+}
+
+function saveSettings() {
+  const cs = $('#cookieSource');
+  const cc = $('#customCookies');
+  const cua = $('#customUserAgent');
+
+  if (cs) userSettings.cookieSource = cs.value;
+  if (cc) userSettings.customCookies = cc.value;
+  if (cua) userSettings.customUserAgent = cua.value;
+
+  localStorage.setItem('fastdl_settings', JSON.stringify(userSettings));
+}
+
+function toggleCustomCookiesVisibility() {
+  const cs = $('#cookieSource');
+  const ccg = $('#customCookiesGroup');
+  if (cs && ccg) {
+    const isCustom = cs.value === 'custom';
+    ccg.hidden = !isCustom;
+  }
+}
+
+function getRequestPayloadOptions() {
+  const options = {};
+  if (userSettings.cookieSource === 'custom') {
+    options.cookies = userSettings.customCookies;
+  } else if (userSettings.cookieSource !== 'none') {
+    options.cookiesFromBrowser = userSettings.cookieSource;
+  }
+  if (userSettings.customUserAgent) {
+    options.userAgent = userSettings.customUserAgent;
+  }
+  return options;
+}
+
+const settingsBtn = $('#settingsBtn');
+const drawerOverlay = $('#drawerOverlay');
+const settingsDrawer = $('#settingsDrawer');
+const drawerCloseBtn = $('#drawerCloseBtn');
+const saveSettingsBtn = $('#saveSettingsBtn');
+const cookieSourceSelect = $('#cookieSource');
+
+if (settingsBtn && drawerOverlay && settingsDrawer) {
+  settingsBtn.addEventListener('click', () => {
+    drawerOverlay.classList.add('active');
+    settingsDrawer.classList.add('active');
+  });
+
+  const closeDrawer = () => {
+    drawerOverlay.classList.remove('active');
+    settingsDrawer.classList.remove('active');
+  };
+
+  drawerOverlay.addEventListener('click', closeDrawer);
+  if (drawerCloseBtn) drawerCloseBtn.addEventListener('click', closeDrawer);
+
+  if (cookieSourceSelect) {
+    cookieSourceSelect.addEventListener('change', toggleCustomCookiesVisibility);
+  }
+
+  if (saveSettingsBtn) {
+    saveSettingsBtn.addEventListener('click', () => {
+      saveSettings();
+      closeDrawer();
+
+      const originalText = saveSettingsBtn.textContent;
+      saveSettingsBtn.textContent = '✓ Saved Successfully!';
+      saveSettingsBtn.style.background = '#34c759';
+      saveSettingsBtn.style.color = '#fff';
+
+      setTimeout(() => {
+        saveSettingsBtn.textContent = originalText;
+        saveSettingsBtn.style.background = '';
+        saveSettingsBtn.style.color = '';
+      }, 1500);
+    });
+  }
+}
+
+document.addEventListener('DOMContentLoaded', loadSettings);

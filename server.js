@@ -27,22 +27,91 @@ function detectPlatform(url) {
   return null;
 }
 
-// Fetch video info endpoint
+async function runYtdlpWithConfig(url, baseArgs, customSettings = {}) {
+  const { cookies, cookiesFromBrowser, userAgent } = customSettings;
+  const platform = detectPlatform(url);
+  const args = { ...baseArgs };
+
+  const defaultUA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
+  const ua = userAgent && userAgent.trim() ? userAgent.trim() : defaultUA;
+  const headers = [`user-agent:${ua}`];
+
+  if (platform === 'instagram') {
+    headers.push('referer:https://www.instagram.com/');
+  } else if (platform === 'youtube') {
+    headers.push('referer:https://www.youtube.com/');
+  }
+  args.addHeader = headers;
+
+  let tempCookiePath = null;
+  let tempDir = null;
+
+  try {
+    if (cookies && cookies.trim()) {
+      tempDir = path.join(os.tmpdir(), 'fastdl_cookies_' + crypto.randomBytes(6).toString('hex'));
+      fs.mkdirSync(tempDir, { recursive: true });
+      tempCookiePath = path.join(tempDir, 'cookies.txt');
+      fs.writeFileSync(tempCookiePath, cookies.trim(), 'utf8');
+      args.cookies = tempCookiePath;
+    } else if (cookiesFromBrowser && cookiesFromBrowser !== 'none') {
+      args.cookiesFromBrowser = cookiesFromBrowser;
+    }
+
+    return await ytdlp(url, args);
+  } finally {
+    if (tempCookiePath && fs.existsSync(tempCookiePath)) {
+      try {
+        fs.rmSync(tempDir, { recursive: true, force: true });
+      } catch (err) {
+        console.error('Error cleaning up cookies:', err.message || err);
+      }
+    }
+  }
+}
+
+function parseYtdlpError(err, defaultMsg) {
+  const rawError = err.message || err.toString() || '';
+  if (rawError.includes("confirm you're not a bot") || rawError.includes("confirm you are not a bot") || rawError.includes("confirm your identity")) {
+    return "YouTube detected bot activity. Please click the Settings icon (cog) and paste a valid Netscape cookies.txt to bypass this block.";
+  }
+  if (rawError.includes('Failed to decrypt with DPAPI')) {
+    return 'Failed to decrypt browser cookies due to Windows DPAPI security restrictions. Please use the "Paste Netscape cookies.txt" option in Settings instead.';
+  }
+  if (rawError.includes('Could not copy Chrome cookie database') || rawError.includes('locked')) {
+    return 'Could not read Chrome/Edge cookies because the browser is open and locking the database. Please close your browser completely, or use the "Paste Netscape cookies.txt" option in Settings.';
+  }
+  if (rawError.includes('Unsupported URL')) {
+    return 'Unsupported URL format. Please make sure the link is correct.';
+  }
+  if (rawError.includes('Requested format is not available')) {
+    return 'The requested video format/quality is not available. Try another quality.';
+  }
+  if (rawError.includes('Sign in to confirm')) {
+    return 'YouTube requires authentication. Please paste valid Netscape cookies.txt in Settings.';
+  }
+  
+  const match = rawError.match(/ERROR:\s*(.+)/);
+  if (match) {
+    return `Error: ${match[1]}`;
+  }
+  
+  return defaultMsg;
+}
+
 app.post('/api/info', async (req, res) => {
-  const { url } = req.body;
+  const { url, cookies, cookiesFromBrowser, userAgent } = req.body;
   if (!url) return res.status(400).json({ error: 'URL is required' });
 
   const platform = detectPlatform(url);
   if (!platform) return res.status(400).json({ error: 'Unsupported URL. Please provide a YouTube or Instagram Reel link.' });
 
   try {
-    const info = await ytdlp(url, {
+    const info = await runYtdlpWithConfig(url, {
       dumpSingleJson: true,
       noWarnings: true,
       noCheckCertificates: true,
       preferFreeFormats: true,
-      addHeader: ['referer:https://www.instagram.com/', 'user-agent:Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'],
-    });
+    }, { cookies, cookiesFromBrowser, userAgent });
 
     const qualities = [];
     const seen = new Set();
@@ -79,16 +148,15 @@ app.post('/api/info', async (req, res) => {
     });
   } catch (err) {
     console.error('Info error:', err.message || err);
-    res.status(500).json({ error: 'Failed to fetch video info. Make sure the link is valid and the video is public.' });
+    const friendlyError = parseYtdlpError(err, 'Failed to fetch video info. Make sure the link is valid and the video is public.');
+    res.status(500).json({ error: friendlyError });
   }
 });
 
-// Download system token mapping
 const pendingDownloads = new Map();
 
-// Step 1: Client prepares download and receives token
 app.post('/api/prepare', (req, res) => {
-  const { url, quality, title } = req.body;
+  const { url, quality, title, cookies, cookiesFromBrowser, userAgent } = req.body;
   if (!url) return res.status(400).json({ error: 'URL is required' });
 
   const platform = detectPlatform(url);
@@ -104,15 +172,13 @@ app.post('/api/prepare', (req, res) => {
   const ext = quality === 'audio' ? '.mp3' : '.mp4';
   const filename = cleanTitle + ext;
 
-  pendingDownloads.set(token, { url, quality, platform, title });
+  pendingDownloads.set(token, { url, quality, platform, title, cookies, cookiesFromBrowser, userAgent });
 
-  // Auto-expire download mapping after 10 minutes
   setTimeout(() => pendingDownloads.delete(token), 10 * 60 * 1000);
 
   res.json({ token, filename, downloadUrl: `/api/download/${token}/${filename}` });
 });
 
-// Step 2: Stream download back to client with filename in path to bypass Chrome restrictions
 app.get('/api/download/:token/:filename', async (req, res) => {
   const { token, filename } = req.params;
   const job = pendingDownloads.get(token);
@@ -121,7 +187,7 @@ app.get('/api/download/:token/:filename', async (req, res) => {
     return res.status(410).json({ error: 'Download link expired. Please try again.' });
   }
 
-  const { url, quality } = job;
+  const { url, quality, cookies, cookiesFromBrowser, userAgent } = job;
   const tmpDir = path.join(os.tmpdir(), 'fastdl_' + crypto.randomBytes(6).toString('hex'));
   fs.mkdirSync(tmpDir, { recursive: true });
 
@@ -133,7 +199,6 @@ app.get('/api/download/:token/:filename', async (req, res) => {
       noCheckCertificates: true,
       output: outputTemplate,
       ffmpegLocation: ffmpegPath,
-      addHeader: ['referer:https://www.instagram.com/', 'user-agent:Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'],
     };
 
     if (quality === 'audio') {
@@ -148,7 +213,7 @@ app.get('/api/download/:token/:filename', async (req, res) => {
       args.mergeOutputFormat = 'mp4';
     }
 
-    await ytdlp(url, args);
+    await runYtdlpWithConfig(url, args, { cookies, cookiesFromBrowser, userAgent });
 
     const files = fs.readdirSync(tmpDir);
     if (files.length === 0) throw new Error('Download failed - no file produced');
@@ -176,12 +241,12 @@ app.get('/api/download/:token/:filename', async (req, res) => {
     console.error('Download error:', err.message || err);
     fs.rmSync(tmpDir, { recursive: true, force: true });
     if (!res.headersSent) {
-      res.status(500).json({ error: 'Download failed. The video may be private or region-restricted.' });
+      const friendlyError = parseYtdlpError(err, 'Download failed. The video may be private or region-restricted.');
+      res.status(500).json({ error: friendlyError });
     }
   }
 });
 
-// Proxy Instagram thumbnails to bypass CORS
 app.get('/api/proxy-thumbnail', async (req, res) => {
   const { url } = req.query;
   if (!url) return res.status(400).send('Image URL is required');

@@ -651,3 +651,219 @@ footer p {
   pointer-events: none;
   display: block;
 }
+
+/* ── Settings Drawer & Custom Components ──────────────── */
+.btn-icon {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text);
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-xs);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.25s var(--ease);
+}
+
+.btn-icon:hover {
+  background: var(--border-light);
+  border-color: var(--text-dim);
+  transform: rotate(30deg);
+}
+
+.btn-icon svg {
+  width: 18px;
+  height: 18px;
+}
+
+.drawer-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(4px);
+  z-index: 100;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.drawer-overlay.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: 100%;
+  max-width: 440px;
+  height: 100vh;
+  background: rgba(20, 20, 20, 0.82);
+  backdrop-filter: blur(25px);
+  -webkit-backdrop-filter: blur(25px);
+  border-left: 1.5px solid rgba(255, 255, 255, 0.08);
+  z-index: 101;
+  transform: translateX(100%);
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  display: flex;
+  flex-direction: column;
+  color: #f3f3f3;
+  box-shadow: -10px 0 30px rgba(0, 0, 0, 0.5);
+}
+
+.drawer.active {
+  transform: translateX(0);
+}
+
+.drawer-header {
+  padding: 24px;
+  border-bottom: 1.5px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.drawer-header h2 {
+  font-family: var(--sans);
+  font-size: 1.15rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: #fff;
+}
+
+.drawer-close {
+  background: transparent;
+  border: none;
+  color: #999;
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s, transform 0.2s;
+}
+
+.drawer-close:hover {
+  color: #fff;
+  transform: rotate(90deg);
+}
+
+.drawer-close svg {
+  width: 20px;
+  height: 20px;
+}
+
+.drawer-body {
+  flex: 1;
+  padding: 24px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.drawer-intro {
+  font-size: 0.84rem;
+  line-height: 1.5;
+  color: #bbb;
+  margin-bottom: 8px;
+}
+
+.setting-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.setting-group label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #888;
+}
+
+.setting-group input[type="text"] {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1.5px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-xs);
+  padding: 11px 14px;
+  color: #fff;
+  font-family: var(--sans);
+  font-size: 0.88rem;
+  outline: none;
+  transition: all 0.25s var(--ease);
+}
+
+.setting-group input[type="text"]:focus {
+  border-color: rgba(255, 255, 255, 0.4);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.setting-group textarea {
+  background: rgba(0, 0, 0, 0.3);
+  border: 1.5px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-xs);
+  padding: 12px;
+  color: #2ed573;
+  font-family: monospace;
+  font-size: 0.78rem;
+  line-height: 1.4;
+  height: 130px;
+  resize: vertical;
+  outline: none;
+  transition: all 0.25s var(--ease);
+}
+
+.setting-group textarea:focus {
+  border-color: rgba(255, 255, 255, 0.4);
+  background: rgba(0, 0, 0, 0.4);
+}
+
+.setting-desc {
+  font-size: 0.74rem;
+  color: #777;
+  line-height: 1.4;
+}
+
+.setting-desc strong {
+  color: #bbb;
+}
+
+.drawer-actions {
+  margin-top: auto;
+  padding-top: 16px;
+}
+
+.drawer .select-box select {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1.5px solid rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+
+.drawer .select-box select:focus {
+  border-color: rgba(255, 255, 255, 0.4);
+}
+
+.drawer .select-box select option {
+  background: #141414;
+  color: #fff;
+}
+
+.drawer .btn-primary {
+  width: 100%;
+  height: 48px;
+  background: #fff;
+  color: #000;
+}
+
+.drawer .btn-primary:hover {
+  background: #eaeaea;
+  box-shadow: 0 4px 15px rgba(255, 255, 255, 0.15);
+}

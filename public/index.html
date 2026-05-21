@@ -21,6 +21,12 @@
       </a>
       <div class="nav-links">
         <a href="#how-it-works">How it works</a>
+        <button id="settingsBtn" class="btn-icon" aria-label="Settings">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="3"></circle>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+          </svg>
+        </button>
       </div>
     </div>
   </nav>
@@ -131,6 +137,53 @@
       </div>
     </div>
   </footer>
+  
+  <!-- Settings Drawer -->
+  <div class="drawer-overlay" id="drawerOverlay"></div>
+  <div class="drawer" id="settingsDrawer">
+    <div class="drawer-header">
+      <h2>Bypass &amp; Config Settings</h2>
+      <button class="drawer-close" id="drawerCloseBtn" aria-label="Close settings">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+      </button>
+    </div>
+    <div class="drawer-body">
+      <p class="drawer-intro">Customize request options to bypass YouTube blocks and bot-detection mechanisms.</p>
+      
+      <div class="setting-group">
+        <label for="cookieSource">YouTube Cookie Source</label>
+        <div class="select-box">
+          <select id="cookieSource">
+            <option value="none">None (Standard requests)</option>
+            <option value="chrome">Chrome (Local Browser)</option>
+            <option value="edge">Edge (Local Browser)</option>
+            <option value="firefox">Firefox (Local Browser)</option>
+            <option value="brave">Brave (Local Browser)</option>
+            <option value="safari">Safari (Local Browser)</option>
+            <option value="custom">Paste Netscape cookies.txt</option>
+          </select>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+        <p class="setting-desc">If standard requests fail, using your active browser's cookies can easily bypass blocks.</p>
+      </div>
+
+      <div class="setting-group" id="customCookiesGroup" hidden>
+        <label for="customCookies">Netscape cookies.txt content</label>
+        <textarea id="customCookies" placeholder="# Netscape HTTP Cookie File&#10;.youtube.com&#9;TRUE&#9;/&#9;TRUE&#9;1749843600&#9;__Secure-3PAPISID&#9;..." spellcheck="false"></textarea>
+        <p class="setting-desc">Export cookies using browser extensions (e.g. <strong>"Get cookies.txt LOCALLY"</strong>) and paste them above. Highly reliable.</p>
+      </div>
+
+      <div class="setting-group">
+        <label for="customUserAgent">Custom User Agent (Optional)</label>
+        <input type="text" id="customUserAgent" placeholder="Mozilla/5.0 ...">
+        <p class="setting-desc">The browser header sent to YouTube. Mimicking a real modern browser is highly recommended.</p>
+      </div>
+      
+      <div class="drawer-actions">
+        <button id="saveSettingsBtn" class="btn-primary">Save Settings</button>
+      </div>
+    </div>
+  </div>
 
   <script src="app.js?v=16"></script>
 </body>
