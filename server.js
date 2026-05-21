@@ -70,9 +70,19 @@ async function runYtdlpWithConfig(url, baseArgs, customSettings = {}) {
 }
 
 function parseYtdlpError(err, defaultMsg) {
-  const rawError = err.message || err.toString() || '';
+  const rawError = (err.stderr || '') + '\n' + (err.message || '') + '\n' + (err.toString() || '');
+  
   if (rawError.includes("confirm you're not a bot") || rawError.includes("confirm you are not a bot") || rawError.includes("confirm your identity")) {
     return "YouTube detected bot activity. Please click the Settings icon (cog) and paste a valid Netscape cookies.txt to bypass this block.";
+  }
+  if (rawError.includes('truncated_id') || rawError.includes('looks truncated') || rawError.includes('Incomplete YouTube ID')) {
+    return 'The YouTube link appears to be truncated or incomplete. Please copy and paste the full URL.';
+  }
+  if (rawError.includes('Video unavailable') || rawError.includes('is unavailable')) {
+    return 'This video is unavailable. It may be private, deleted, or region-restricted.';
+  }
+  if (rawError.includes('Private video')) {
+    return 'This video is private. Please use the Settings icon (cog) to import cookies if you have access to it.';
   }
   if (rawError.includes('Failed to decrypt with DPAPI')) {
     return 'Failed to decrypt browser cookies due to Windows DPAPI security restrictions. Please use the "Paste Netscape cookies.txt" option in Settings instead.';
@@ -274,6 +284,10 @@ app.get('/api/proxy-thumbnail', async (req, res) => {
   }
 });
 
-app.listen(PORT, () => {
-  console.log(`⚡ FastDownload running at http://localhost:${PORT}`);
-});
+if (!process.env.VERCEL) {
+  app.listen(PORT, () => {
+    console.log(`⚡ FastDownload running at http://localhost:${PORT}`);
+  });
+}
+
+module.exports = app;
